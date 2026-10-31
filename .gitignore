@@ -1,0 +1,12 @@
+target/
+test-output/
+.idea/
+.run/
+*.iml
+.env
+.env.*
+!.env.example
+*.log
+*.tmp
+.DS_Store
+Thumbs.db

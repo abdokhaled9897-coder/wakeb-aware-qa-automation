@@ -1,0 +1,731 @@
+<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Wakeb Aware — شرح الأوتوميشن</title><style>
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#f3f6fb;color:#15243b;font:17px/1.95 Tahoma,Arial,sans-serif}a{color:#076878}main{max-width:1140px;margin:0 auto;padding:38px 28px 70px}header{background:#112d49;color:white;padding:38px;border-radius:20px;margin-bottom:25px}header p{color:#d3e7f5}h1{font-size:31px;line-height:1.6}h2{font-size:25px;border-bottom:2px solid #cde1e9;padding-bottom:12px;margin-top:12px}h3{font-size:19px;color:#075c6e}section{background:white;padding:28px;margin:25px 0;border:1px solid #dbe4ee;border-radius:15px;scroll-margin-top:12px}p{margin:13px 0}nav{columns:2;column-gap:34px}nav a{display:block;padding:6px 0;break-inside:avoid;text-decoration:none}code{font:0.9em/1.65 Consolas,'Courier New',monospace;direction:ltr;unicode-bidi:isolate;color:#075c6e;background:#edf4f8;padding:2px 5px;border-radius:3px}pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;text-align:left;direction:ltr;unicode-bidi:embed;font:14px/1.7 Consolas,'Courier New',monospace;tab-size:4}pre code{font:inherit;background:none;color:#e5edf9;padding:0;unicode-bidi:embed}.code{background:#15253b;border-radius:10px;padding:22px;margin:20px 0;direction:ltr;text-align:left}table{border-collapse:collapse;width:100%;margin:18px 0;font-size:16px}td,th{border:1px solid #d9e2ec;padding:12px 14px;vertical-align:top;text-align:right}th{background:#eaf3f7}td:first-child{width:26%;font-weight:bold}.note{padding:16px 20px;background:#edf6fb;border-right:5px solid #07838a;border-radius:7px}.say{background:#f1f7ee;padding:16px 20px;border-right:5px solid #66953c}.path{font:13px/1.7 Consolas,monospace;direction:ltr;text-align:left;unicode-bidi:isolate;overflow-wrap:anywhere;color:#456}.back{font-size:13px;display:block;text-align:left}li{margin:9px 0}footer{font-size:13px;color:#53667c}.badge{display:inline-block;border:1px solid #6e9bb4;padding:4px 13px;border-radius:20px;margin-left:8px;font-size:13px}button{background:#076878;color:white;border:0;border-radius:7px;padding:11px 18px;font:inherit;cursor:pointer}@media(max-width:650px){main{padding:12px}header,section{padding:18px}nav{columns:1}h1{font-size:25px}table{font-size:14px}td,th{padding:8px}.code{padding:12px}pre{font-size:12px}}@media print{body{background:white;font-size:11pt;line-height:1.7}main{padding:0;max-width:none}header{background:white;color:#112d49;border:2px solid #112d49}header p{color:#112d49}section{border:0;border-radius:0;padding:0;break-before:page}table{font-size:10pt}tr{break-inside:avoid}h2,h3{break-after:avoid}.code{background:#f0f2f5;color:black;padding:10px;box-decoration-break:clone}pre code{color:black}pre{font-size:8.5pt}.back,button{display:none}nav{columns:1}a{color:black;text-decoration:none}}
+</style></head><body><main id="top"><header><span class="badge">Java 27</span><span class="badge">Selenium</span><span class="badge">TestNG</span><span class="badge">Maven</span><h1>Wakeb Aware<br>شرح المشروع من الإعدادات لآخر تحقق</h1><p>شرح بالعربي البسيط، مع الكود الفعلي لكل ملف وتفسيره تحته. نسخة الشرح: 30 أكتوبر 2026.</p></header><section><h2>ابدأ من هنا</h2><p>المشروع ده فيه Login بستة سيناريوهات، ودورة Tickets من إنشاء Report من مخالفة إلى Resolved. هنشرحه على نسخة Wakeb_Aware_Automation_Practice الموجودة فعلًا، مش على النسخ القديمة Java27 أو Simple.</p><p>فكرة Page Object Model هنا بسيطة: LoginPage وTicketsPage يمثلوا صفحات وتعاملات الموقع، وLoginTests وTicketsTests يمثلوا سيناريوهات الاختبار. BaseTest يجمع تجهيز المتصفح وإغلاقه، وConfigReader وDriverFactory أدوات مشتركة.</p><p>وجود components package فاضي في التري مش معناه وجود كود لازم نحفظه. المهم الكلاسات الفعلية اللي هتقرأها تحت.</p><div class="note">الشرح مبني على قراءة ملفات المشروع، وليس إعادة تشغيل جديدة للاختبارات. الكود مضمّن كما هو؛ لم نغيّر مصادر المشروع أثناء إعداد الشرح. لا يوجد باسورد فعلي في الدليل.</div><h3>طريقة المذاكرة</h3><p>اقرأ الفكرة وخريطة التنفيذ الأول. بعد كده خد ملفًا واحدًا: اقرأ وظيفته، راجع الكود، ثم اقرأ تفسير كل جزء تحته. جرّب تحكي دور الملف بصوتك قبل ما تنتقل للبعده.</p><p>احفظ سبب وجود كل خطوة وطريقة التحقق من نتيجتها. مش مطلوب تحفظ النص حرفيًا، لكن لازم تقدر تتبع السطر اللي بيشغّل السطر اللي بعده.</p><h3>خريطة التنفيذ</h3><div class="code"><pre dir="ltr"><code>TestNG XML
+  -&gt; BaseTest.setUp() -&gt; DriverFactory.createDriver() -&gt; ConfigReader.get(...)
+  -&gt; LoginTests.openLoginPage() -&gt; LoginPage.open()
+  -&gt; one @Test -&gt; page actions -&gt; Assert
+  -&gt; BaseTest.tearDown()
+
+TicketsTests.ticketLifecycle()
+  -&gt; Login -&gt; manual CAPTCHA -&gt; Events
+  -&gt; Violation 104 -&gt; Report -&gt; New / Medium + attachment
+  -&gt; Comment -&gt; High -&gt; In Analysis -&gt; Resolved
+  -&gt; reopen + verify persistence -&gt; browser closes after 5 seconds
+
+successfulLogin(): keepBrowserOpen=true -&gt; user closes Chrome manually</code></pre></div><h3>فهرس ملفات المشروع</h3><nav><a href="#f1">1. <bdi>pom.xml</bdi></a><a href="#f2">2. <bdi>config.properties</bdi></a><a href="#f3">3. <bdi>ConfigReader.java</bdi></a><a href="#f4">4. <bdi>DriverFactory.java</bdi></a><a href="#f5">5. <bdi>BaseTest.java</bdi></a><a href="#f6">6. <bdi>LoginPage.java</bdi></a><a href="#f7">7. <bdi>LoginTests.java</bdi></a><a href="#f8">8. <bdi>TicketsPage.java</bdi></a><a href="#f9">9. <bdi>TicketsTests.java</bdi></a><a href="#f10">10. <bdi>all.xml</bdi></a><a href="#f11">11. <bdi>Main.java</bdi></a><a href="#f12">12. <bdi>login.xml</bdi></a><a href="#f13">13. <bdi>tickets.xml</bdi></a></nav></section><section id="terms"><h2>المفاهيم اللي هتقابلك في الكود</h2><table><thead><tr><th>الجزء</th><th>معناه في المشروع</th></tr></thead><tbody><tr><td>Java / Selenium / TestNG / Maven</td><td>Java هي اللغة. Selenium بيحرّك المتصفح. TestNG بينظّم تشغيل الاختبارات ونتائجها. Maven بيقرأ pom.xml ويحمل المكتبات ويبني المشروع.</td></tr><tr><td>Class / Object</td><td>الكلاس وصف للحاجة؛ مثل LoginPage. الـObject نسخة شغالة منه. new LoginPage(driver) بينشئ نسخة مرتبطة بالمتصفح الموجود.</td></tr><tr><td>Constructor</td><td>دالة تجهيز اسمها نفس اسم الكلاس، من غير نوع إرجاع. بتشتغل وقت new. هي مش التيست ومش دالة فتح المتصفح تلقائيًا.</td></tr><tr><td>this.driver = driver</td><td>اليمين هو المتصفح اللي اتبعت للكونستراكتور. الشمال هو متغير الكلاس. كده الصفحة تستخدم نفس المتصفح، مش متصفح جديد.</td></tr><tr><td>public / private / protected</td><td>public متاح من خارج الكلاس. private للاستخدام داخل نفس الكلاس. protected يخلي الكلاسات الوارثة تقدر تستخدم العضو، وكمان نفس الـpackage.</td></tr><tr><td>static / final / abstract</td><td>static يخص الكلاس ويمكن استدعاؤه من غير new. final على المتغير يمنع إعادة إسناده، وليس تغيير محتوى كل Object. final على الكلاس يمنع الوراثة. abstract كلاس أساس لا ننشئ منه Object مباشرة.</td></tr><tr><td>String / int / boolean / void</td><td>String نص، int رقم صحيح، boolean إما true أو false. void معناها الدالة لا ترجع قيمة. return بيرجع نتيجة ويُنهي تنفيذ الدالة الحالية.</td></tr><tr><td>extends / super</td><td>extends توريث أعضاء وسلوك من كلاس أساس. super(driver) يستدعي كونستراكتور الأب ويمرّر له نفس المتصفح.</td></tr><tr><td>By / WebElement</td><td>By وصف مكان العنصر؛ مثل عنوانه. WebElement هو العنصر اللي Selenium لاقاه فعليًا. لو الصفحة أعادت رسم العنصر، مرجع WebElement القديم ممكن يبقى stale.</td></tr><tr><td>import / package</td><td>package يحدد مكان الكلاس المنطقي. import يسمح باستخدام اسم كلاس من مكتبة أو package أخرى من غير كتابة اسمه الكامل كل مرة.</td></tr><tr><td>WebDriver / ChromeDriver</td><td>WebDriver واجهة أوامر المتصفح. ChromeDriver هو التنفيذ الخاص بكروم. WebDriver driver = new ChromeDriver(...) يخلينا نتعامل مع كروم من خلال الواجهة.</td></tr><tr><td>CSS Selector / XPath</td><td>CSS يحدد العنصر بخصائصه أو كلاساته. XPath يسمح كمان بالتنقل للأب وبالاختيار حسب النص. normalize-space() يزيل المسافات الزائدة عند مقارنة النص.</td></tr><tr><td>By.id / By.cssSelector / By.xpath</td><td>الأولى للـid، الثانية لمحدد CSS، الثالثة لتعبير XPath. الـid المتغير مثل input-v-... لا نعتمد عليه؛ نختار خاصية ثابتة مثل placeholder أو id معنوي ثابت.</td></tr><tr><td>WebDriverWait / until</td><td>انتظار بشرط ولمدة قصوى. لو الشرط تحقق بدري يكمل فورًا. مش معناه إن كل خطوة تستنى المدة كاملة.</td></tr><tr><td>presence / visibility / clickable</td><td>presence: العنصر موجود في DOM. visibility: موجود وظاهر وله مساحة. clickable: ظاهر ومفعّل؛ لكنه وحده لا يضمن إن مفيش نافذة تانية مغطياه.</td></tr><tr><td>DOM / getDomProperty / getDomAttribute</td><td>DOM تمثيل عناصر الصفحة. property مثل value تقرأ القيمة الحالية أثناء التشغيل. attribute تقرأ خاصية العنصر مثل readonly أو aria-selected.</td></tr><tr><td>Assert</td><td>تحقق يحدد نجاح التيست. assertEquals يقارن الفعلي بالمتوقع. assertTrue يشترط true. assertFalse يشترط false. الضغط على Save وحده لا يثبت نجاح الحفظ.</td></tr><tr><td>! / &amp;&amp; / || / == / equals</td><td>! يعكس boolean. &amp;&amp; يعني الشرطان معًا، || واحد منهما يكفي. == يقارن أرقامًا وboolean أو هوية Objects؛ نقارن محتوى النص باستخدام equals أو equalsIgnoreCase.</td></tr><tr><td>null / isBlank / isEmpty</td><td>null يعني مفيش مرجع لقيمة. isEmpty يعني طول النص صفر. isBlank يشمل النص الفاضي والمسافات. لازم نتأكد من null قبل استدعاء دالة على المتغير.</td></tr><tr><td>try / catch / finally / throw / throws</td><td>try نجرب تنفيذًا قد يفشل. catch يعالج نوع خطأ محدد. finally ينفذ التنظيف. throw يرمي خطأ فعليًا. throws يعلن إن الدالة قد تمرّر الخطأ لمن استدعاها.</td></tr><tr><td>IOException</td><td>تنطق آي أو إكسبشن. خطأ إدخال/إخراج، مثل مشكلة قراءة ملف. الاسم جزء من Java مش اسم إحنا اخترناه.</td></tr><tr><td>IllegalStateException / IllegalArgumentException</td><td>الأولى حالة غير مناسبة للتنفيذ، مثل إعداد مطلوب ناقص. الثانية قيمة وسيط غير مقبولة، مثل طلب متصفح غير مدعوم. برضه أسماء أنواع أخطاء جاهزة في Java.</td></tr><tr><td>d -&gt; ...</td><td>دي lambda: دالة صغيرة بنمررها للانتظار. d هو المتصفح في كل محاولة. رجوع false أو null يخلي الانتظار يحاول تاني لحد النجاح أو انتهاء الوقت.</td></tr><tr><td>for / List / StringBuilder</td><td>for تكرر تعليمات. List قائمة عناصر. StringBuilder يجمع أجزاء نص بشكل مناسب داخل التكرار. getFirst() يرجع أول عنصر من القائمة.</td></tr><tr><td>Path / Files</td><td>أدوات Java للتعامل مع مسار الملف والتحقق من وجوده وكتابة الصورة. المسار النسبي بيتحسب من Working directory الحالي للمشروع.</td></tr><tr><td>Test method / Page method</td><td>دالة الصفحة تنفذ تعاملًا مع الواجهة. دالة التيست تروي السيناريو وتتحقق من نتيجته. بعض دوال الصفحة هنا تتضمن انتظارًا وتحققًا داخليًا أيضًا.</td></tr><tr><td>BeforeMethod / AfterMethod</td><td>TestNG ينفذ BeforeMethod قبل كل Test وAfterMethod بعد كل Test. مش مرة واحدة لكل الملف. alwaysRun=true يساعد التنظيف يشتغل حتى مع حالات الفشل.</td></tr><tr><td>priority / groups / description</td><td>priority في TestNG ترتيب تنفيذ، مش خطورة البج. groups تصنيف اختبارات. description وصف يظهر في التقرير، وليس أمر تشغيل أو تحققًا في حد ذاته.</td></tr><tr><td>Thread.sleep(5000)</td><td>توقف ثابت خمس ثواني. في نهاية التيست هنا لإتاحة رؤية النتيجة. مختلف عن WebDriverWait اللي ينتظر شرطًا ويتحرك فور تحققه.</td></tr><tr><td>Environment variable / System property</td><td>System.getenv يقرأ متغير بيئة وصل لعملية التشغيل. System.getProperty يقرأ Java system property مثل -Dtimeout.seconds=30. دول مصدران مختلفان.</td></tr></tbody></table></section><section><h2>السيناريوهات الموجودة فعلًا</h2><table><thead><tr><th>الجزء</th><th>معناه في المشروع</th></tr></thead><tbody><tr><td>1. emptyEmailAndPassword</td><td>الخانتان فارغتان؛ رسالة البريد المطلوبة والبقاء في /login.</td></tr><tr><td>2. correctEmailAndWrongPassword</td><td>بريد صحيح وباسورد خطأ؛ رفض الدخول بالرسالة المتوقعة.</td></tr><tr><td>3. wrongEmailAndCorrectPassword</td><td>بريد خطأ وباسورد صحيح؛ رفض الدخول.</td></tr><tr><td>4. wrongEmailAndWrongPassword</td><td>الاثنان خطأ؛ رفض الدخول.</td></tr><tr><td>5. showAndHidePassword</td><td>تغيير type وإثبات عدم تغير قيمة الباسورد.</td></tr><tr><td>6. successfulLogin</td><td>دخول ناجح إلى Events؛ يترك Chrome مفتوحًا.</td></tr><tr><td>7. ticketLifecycle</td><td>إنشاء تقرير بمرفق، تحقق من البيانات، تعليق، High، In Analysis، Resolved، وإعادة فتح للتحقق من الحفظ.</td></tr></tbody></table></section><section id="f1"><h2>1. <bdi>pom.xml</bdi></h2><div class="path">pom.xml</div><p>ملف تعريف مشروع Maven والمكتبات.</p><h3>الكود الكامل كما هو في المشروع</h3><div class="code"><pre dir="ltr"><code>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+    &lt;groupId&gt;com.wakeb&lt;/groupId&gt;
+    &lt;artifactId&gt;wakeb-aware-automation&lt;/artifactId&gt;
+    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+
+    &lt;properties&gt;
+        &lt;maven.compiler.source&gt;27&lt;/maven.compiler.source&gt;
+        &lt;maven.compiler.target&gt;27&lt;/maven.compiler.target&gt;
+        &lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
+    &lt;/properties&gt;
+
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.seleniumhq.selenium&lt;/groupId&gt;
+            &lt;artifactId&gt;selenium-java&lt;/artifactId&gt;
+            &lt;version&gt;4.51.0&lt;/version&gt;
+        &lt;/dependency&gt;
+
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.testng&lt;/groupId&gt;
+            &lt;artifactId&gt;testng&lt;/artifactId&gt;
+            &lt;version&gt;7.11.0&lt;/version&gt;
+            &lt;scope&gt;test&lt;/scope&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+
+&lt;/project&gt;</code></pre></div><h3>شرح الكود</h3><table><thead><tr><th>الجزء</th><th>معناه في المشروع</th></tr></thead><tbody><tr><td>modelVersion / groupId / artifactId / version</td><td>بيانات تعريف POM والمشروع. 4.0.0 نسخة نموذج POM، و1.0-SNAPSHOT نسخة مشروع تحت التطوير.</td></tr><tr><td>properties</td><td>source وtarget مضبوطين على Java 27؛ وUTF-8 لحفظ وقراءة ملفات المصدر بنص عربي سليم.</td></tr><tr><td>dependencies</td><td>selenium-java 4.51.0 للتحكم في المتصفح وtestng 7.11.0 للاختبارات. scope=test يخلي TestNG متاحًا لمصدر الاختبارات.</td></tr><tr><td>طريقة التشغيل في النسخة دي</td><td>الـPOM لا يحدد Surefire أو suite افتراضية صراحةً. الطريقة اللي بنشرحها هنا هي تشغيل ملفات TestNG XML من IntelliJ. لا نفترض إن mvn test يشغّل XML بنفس الإعداد تلقائيًا.</td></tr></tbody></table><a class="back" href="#top">الرجوع للفهرس ↑</a></section><section id="f2"><h2>2. <bdi>config.properties</bdi></h2><div class="path">src/main/resources/config.properties</div><p>إعدادات تشغيل تتغير من مكان واحد.</p><h3>الكود الكامل كما هو في المشروع</h3><div class="code"><pre dir="ltr"><code>base.url=https://aware.wakeb.dev
+browser=chrome
+headless=false
+timeout.seconds=15
+ticket.violation.id=104
+ticket.detection.type=People count
+ticket.report.to=Admin</code></pre></div><h3>شرح الكود</h3><table><thead><tr><th>الجزء</th><th>معناه في المشروع</th></tr></thead><tbody><tr><td>base.url</td><td>عنوان الموقع الأساسي من غير /login. LoginPage يضيف /login وTicketsPage يضيف /tickets وقت الاستخدام.</td></tr><tr><td>browser / headless</td><td>المتصفح chrome. headless=false يعني نافذة ظاهرة؛ true تشغيل من غير نافذة عرض عادية.</td></tr><tr><td>timeout.seconds</td><td>مدة الانتظار العامة 15 ثانية، وليست تأخيرًا ثابتًا. LoginTests يستخدم أيضًا انتظار 15 ثانية، وTicketsTests انتظار 20 ثانية لبعض التحقق، وCAPTCHA لها 120 ثانية.</td></tr><tr><td>ticket.violation.id</td><td>المخالفة اللي منها هننشئ تذكرة؛ قيمتها في النسخة دي 104. لازم تكون موجودة والحساب عنده صلاحية الوصول لها.</td></tr><tr><td>ticket.detection.type / ticket.report.to</td><td>People count وAdmin هي نصوص الاختيارات المطلوبة. تغيير بيانات الموقع قد يتطلب تعديل القيم هنا.</td></tr><tr><td>بيانات الدخول</td><td>مش موجودة في الملف. الاختبارات تقرأ AWARE_EMAIL وAWARE_PASSWORD من Environment variables.</td></tr></tbody></table><a class="back" href="#top">الرجوع للفهرس ↑</a></section><section id="f3"><h2>3. <bdi>ConfigReader.java</bdi></h2><div class="path">src/main/java/com/wakeb/aware/config/ConfigReader.java</div><p>مسؤول عن قراءة قيمة إعداد باسمها.</p><h3>الكود الكامل كما هو في المشروع</h3><div class="code"><pre dir="ltr"><code>package com.wakeb.aware.config;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+
+public class ConfigReader {
+
+    public static String get(String key) throws IOException {
+
+        Properties properties = new Properties();
+
+        try (InputStream file = ConfigReader.class
+                .getResourceAsStream(&quot;/config.properties&quot;)) {
+
+            if (file == null) {
+                throw new IOException(&quot;config.properties was not found&quot;);
+            }
+
+            properties.load(file);
+        }
+
+        return properties.getProperty(key);
+    }
+}</code></pre></div><h3>شرح الكود</h3><table><thead><tr><th>الجزء</th><th>معناه في المشروع</th></tr></thead><tbody><tr><td>get(String key) throws IOException</td><td>يستقبل اسم الإعداد مثل base.url ويرجع قيمته كنص. throws معناها إن مشكلة القراءة ممكن تنتقل للدالة اللي استدعته.</td></tr><tr><td>Properties properties = new Properties()</td><td>وعاء لبيانات بالشكل key=value. في الكود ده بيتعمل وعاء جديد وبيتقرأ الملف من جديد في كل استدعاء get؛ مش تحميل مرة واحدة.</td></tr><tr><td>getResourceAsStream(&quot;/config.properties&quot;)</td><td>يفتح مورد موجود في جذر classpath. src/main/resources هو مكان الملف في المصدر، وMaven ينقله إلى مخرجات التشغيل.</td></tr><tr><td>try (InputStream file = ...)</td><td>try-with-resources يقفل مجرى الملف تلقائيًا بعد القراءة، حتى لو حصل خطأ.</td></tr><tr><td>if (file == null)</td><td>لو المورد مش موجود نرمي IOException برسالة واضحة بدل محاولة القراءة من null.</td></tr><tr><td>properties.load / getProperty</td><td>load يقرأ الإعدادات، وgetProperty(key) يرجع الإعداد المطلوب. لو المفتاح غير موجود getProperty هنا قد يرجع null.</td></tr><tr><td>ملاحظة الترميز</td><td>الإعدادات الحالية كلها ASCII. load(InputStream) هنا مختلف عن قارئ UTF-8 الصريح في مشروع VMS؛ متفترضش إن إضافة نص عربي مباشر إلى هذا الملف هتتقرأ بنفس الطريقة.</td></tr></tbody></table><a class="back" href="#top">الرجوع للفهرس ↑</a></section><section id="f4"><h2>4. <bdi>DriverFactory.java</bdi></h2><div class="path">src/main/java/com/wakeb/aware/driver/DriverFactory.java</div><p>مكان واحد لإنشاء جلسة المتصفح.</p><h3>الكود الكامل كما هو في المشروع</h3><div class="code"><pre dir="ltr"><code>package com.wakeb.aware.driver;
+
+import com.wakeb.aware.config.ConfigReader;
+import java.io.IOException;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+
+public class DriverFactory {
+
+    public static WebDriver createDriver() throws IOException {
+
+        String browser = ConfigReader.get(&quot;browser&quot;);
+
+        if (!&quot;chrome&quot;.equalsIgnoreCase(browser)) {
+            throw new IllegalArgumentException(&quot;Only Chrome is supported&quot;);
+        }
+
+        ChromeOptions options = new ChromeOptions();
+        options.setExperimentalOption(&quot;detach&quot;, true);
+
+        boolean headless = Boolean.parseBoolean(
+                ConfigReader.get(&quot;headless&quot;)
+        );
+
+        if (headless) {
+            options.addArguments(&quot;--headless=new&quot;);
+        }
+
+        WebDriver driver = new ChromeDriver(options);
+        driver.manage().window().maximize();
+
+        return driver;
+    }
+}</code></pre></div><h3>شرح الكود</h3><table><thead><tr><th>الجزء</th><th>معناه في المشروع</th></tr></thead><tbody><tr><td>createDriver()</td><td>دالة static نستدعيها باسم الكلاس. ترجع WebDriver جاهز لاستخدام صفحات الموقع.</td></tr><tr><td>!&quot;chrome&quot;.equalsIgnoreCase(browser)</td><td>يقارن اسم المتصفح من غير حساسية لحالة الحروف. ! يعني لو الاسم مش chrome نوقف برسالة Only Chrome is supported. وضع النص الثابت على الشمال يتجنب NullPointerException لو الإعداد ناقص.</td></tr><tr><td>ChromeOptions</td><td>إعدادات نمررها إلى ChromeDriver قبل فتح كروم.</td></tr><tr><td>detach=true</td><td>يسمح ببقاء كروم بعد انتهاء عملية الاختبار إذا لم تُنهَ الجلسة. لا يمنع driver.quit من إغلاقها؛ قرار الاستمرار الأساسي عندنا keepBrowserOpen.</td></tr><tr><td>Boolean.parseBoolean / headless</td><td>تحويل النص true أو false إلى boolean. لو headless=true نضيف --headless=new.</td></tr><tr><td>new ChromeDriver(options)</td><td>ينشئ جلسة Chrome فعلية. لم نضف WebDriverManager كمكتبة منفصلة في المشروع.</td></tr><tr><td>maximize / return</td><td>يكبّر النافذة ويرجع نفس المتصفح للكود اللي طلبه.</td></tr></tbody></table><a class="back" href="#top">الرجوع للفهرس ↑</a></section><section id="f5"><h2>5. <bdi>BaseTest.java</bdi></h2><div class="path">src/test/java/com/wakeb/aware/tests/BaseTest.java</div><p>الأساس المشترك اللي LoginTests وTicketsTests بيرثوا منه.</p><h3>الكود الكامل كما هو في المشروع</h3><div class="code"><pre dir="ltr"><code>package com.wakeb.aware.tests;
+
+import com.wakeb.aware.driver.DriverFactory;
+import java.io.IOException;
+import org.openqa.selenium.WebDriver;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+
+public class BaseTest {
+
+    protected WebDriver driver;
+    protected boolean keepBrowserOpen;
+
+    @BeforeMethod
+    public void setUp() throws IOException {
+        keepBrowserOpen = false;
+        driver = DriverFactory.createDriver();
+    }
+
+    @AfterMethod(alwaysRun = true)
+    public void tearDown() throws InterruptedException {
+        if (driver != null &amp;&amp; !keepBrowserOpen) {
+            Thread.sleep(5000);
+            driver.quit();
+        }
+    }
+}</code></pre></div><h3>شرح الكود</h3><table><thead><tr><th>الجزء</th><th>معناه في المشروع</th></tr></thead><tbody><tr><td>protected WebDriver driver</td><td>متغير المتصفح مشترك مع الكلاسات الوارثة. protected يخلي الاختبارات تقدر تستخدمه.</td></tr><tr><td>keepBrowserOpen</td><td>علامة boolean؛ الأصل false. التيست الناجح الخاص باللوجين يغيّرها إلى true.</td></tr><tr><td>setUp / @BeforeMethod</td><td>قبل كل تيست يرجع العلامة false ويفتح متصفحًا جديدًا عن طريق DriverFactory. عشان التيستات متعتمدش على جلسة بعضها.</td></tr><tr><td>tearDown / @AfterMethod(alwaysRun=true)</td><td>لو المتصفح موجود والعلامة false ينتظر خمس ثواني ثم يغلق الجلسة بالكامل باستخدام quit.</td></tr><tr><td>حالة اللوجين الناجح</td><td>successfulLogin يترك المتصفح مفتوحًا فقط بعد نجاح التحقق والوصول إلى Events. لو التحقق فشل قبل العلامة، المتصفح يتقفل بالطريقة المعتادة.</td></tr><tr><td>تشغيل all.xml</td><td>اللوجين الناجح قد يترك نافذته مفتوحة، وبعده TicketsTests ينشئ جلسة أخرى مستقلة. دي مش نفس جلسة الدخول اللي تتركها مفتوحة.</td></tr></tbody></table><a class="back" href="#top">الرجوع للفهرس ↑</a></section><section id="f6"><h2>6. <bdi>LoginPage.java</bdi></h2><div class="path">src/main/java/com/wakeb/aware/pages/LoginPage.java</div><p>Page Object لصفحة الدخول؛ فيها العناصر والأكشنز الأساسية.</p><h3>الكود الكامل كما هو في المشروع</h3><div class="code"><pre dir="ltr"><code>package com.wakeb.aware.pages;
+
+import com.wakeb.aware.config.ConfigReader;
+import java.io.IOException;
+import java.time.Duration;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+public class LoginPage {
+
+    private WebDriver driver;
+    private WebDriverWait wait;
+
+    private By emailField =
+            By.cssSelector(&quot;input[placeholder=&#x27;Enter Email&#x27;]&quot;);
+
+    private By passwordField =
+            By.cssSelector(&quot;input[placeholder=&#x27;Enter Password&#x27;]&quot;);
+
+    private By signInButton =
+            By.cssSelector(&quot;button[type=&#x27;submit&#x27;]&quot;);
+
+    public LoginPage(WebDriver driver) throws IOException {
+        this.driver = driver;
+
+        int timeout = Integer.parseInt(
+                ConfigReader.get(&quot;timeout.seconds&quot;)
+        );
+
+        wait = new WebDriverWait(driver, Duration.ofSeconds(timeout));
+    }
+
+    public void open() throws IOException {
+        driver.get(ConfigReader.get(&quot;base.url&quot;) + &quot;/login&quot;);
+
+        wait.until(
+                ExpectedConditions.visibilityOfElementLocated(emailField)
+        );
+    }
+
+    public void enterEmail(String email) {
+        wait.until(
+                ExpectedConditions.visibilityOfElementLocated(emailField)
+        ).clear();
+
+        driver.findElement(emailField).sendKeys(email);
+    }
+
+    public void enterPassword(String password) {
+        wait.until(
+                ExpectedConditions.visibilityOfElementLocated(passwordField)
+        ).clear();
+
+        driver.findElement(passwordField).sendKeys(password);
+    }
+
+    public void clickSignIn() {
+        wait.until(
+                ExpectedConditions.elementToBeClickable(signInButton)
+        ).click();
+    }
+}</code></pre></div><h3>شرح الكود</h3><table><thead><tr><th>الجزء</th><th>معناه في المشروع</th></tr></thead><tbody><tr><td>driver / wait / By fields</td><td>driver هو نفس المتصفح الممرر. wait مسؤول عن الانتظار. emailField وpasswordField وsignInButton أوصاف أماكن العناصر.</td></tr><tr><td>المحددات</td><td>placeholder ثابت للبريد والباسورد، وزر type=submit للدخول. المحددات الحالية معتمدة على واجهة إنجليزية.</td></tr><tr><td>LoginPage(WebDriver driver)</td><td>كونستراكتور يستلم المتصفح، يخزّنه في this.driver، يقرأ timeout.seconds ويحوّله int ثم Duration ويجهّز wait. لا يفتح كروم جديدًا.</td></tr><tr><td>open()</td><td>يفتح base.url + /login وينتظر ظهور خانة البريد. استدعاء new LoginPage وحده لا ينفذ open.</td></tr><tr><td>enterEmail / enterPassword</td><td>ينتظر الخانة، يمسحها، ثم يكتب القيمة الممررة. الدالتان لا تحكمان هل البيانات صحيحة؛ الحكم في التيست.</td></tr><tr><td>clickSignIn()</td><td>ينتظر زر الدخول ظاهرًا ومفعّلًا ثم يضغط عليه.</td></tr><tr><td>رسالة البريد</td><td>إحنا ملتزمين باختيارك: محدد رسالة Email field is required موجود داخل LoginTests، مش داخل LoginPage.</td></tr></tbody></table><a class="back" href="#top">الرجوع للفهرس ↑</a></section><section id="f7"><h2>7. <bdi>LoginTests.java</bdi></h2><div class="path">src/test/java/com/wakeb/aware/tests/login/LoginTests.java</div><p>ستة سيناريوهات بالترتيب اللي اتفقنا عليه.</p><h3>الكود الكامل كما هو في المشروع</h3><div class="code"><pre dir="ltr"><code>package com.wakeb.aware.tests.login;
+
+import com.wakeb.aware.pages.LoginPage;
+import com.wakeb.aware.tests.BaseTest;
+import java.io.IOException;
+import java.time.Duration;
+import org.openqa.selenium.By;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+public class LoginTests extends BaseTest {
+
+    private LoginPage loginPage;
+    private WebDriverWait wait;
+
+    private String validEmail = System.getenv(&quot;AWARE_EMAIL&quot;);
+    private String validPassword = System.getenv(&quot;AWARE_PASSWORD&quot;);
+
+    @BeforeMethod
+    public void openLoginPage() throws IOException {
+        Assert.assertNotNull(validEmail, &quot;Set AWARE_EMAIL before running.&quot;);
+        Assert.assertNotNull(validPassword, &quot;Set AWARE_PASSWORD before running.&quot;);
+
+        loginPage = new LoginPage(driver);
+
+        wait = new WebDriverWait(
+                driver, Duration.ofSeconds(15)
+        );
+
+        loginPage.open();
+    }
+
+    @Test(priority = 1)
+    public void emptyEmailAndPassword() {
+        loginPage.enterEmail(&quot;&quot;);
+        loginPage.enterPassword(&quot;&quot;);
+
+        signIn();
+
+        String actualMessage = wait.until(
+                ExpectedConditions.visibilityOfElementLocated(
+                        By.cssSelector(&quot;.v-messages__message&quot;)
+                )
+        ).getText();
+
+        Assert.assertEquals(
+                actualMessage,
+                &quot;Email field is required.&quot;
+        );
+
+        Assert.assertTrue(
+                driver.getCurrentUrl().contains(&quot;/login&quot;)
+        );
+    }
+
+    @Test(priority = 2)
+    public void correctEmailAndWrongPassword() {
+        loginPage.enterEmail(validEmail);
+        loginPage.enterPassword(&quot;WrongPassword123!&quot;);
+
+        signIn();
+        checkLoginError();
+    }
+
+    @Test(priority = 3)
+    public void wrongEmailAndCorrectPassword() {
+        loginPage.enterEmail(&quot;wrong.user@example.com&quot;);
+        loginPage.enterPassword(validPassword);
+
+        signIn();
+        checkLoginError();
+    }
+
+    @Test(priority = 4)
+    public void wrongEmailAndWrongPassword() {
+        loginPage.enterEmail(&quot;wrong.user@example.com&quot;);
+        loginPage.enterPassword(&quot;WrongPassword123!&quot;);
+
+        signIn();
+        checkLoginError();
+    }
+
+    @Test(priority = 5)
+    public void showAndHidePassword() {
+        String samplePassword = &quot;TestPassword123!&quot;;
+
+        By passwordField = By.cssSelector(
+                &quot;input[placeholder=&#x27;Enter Password&#x27;]&quot;
+        );
+
+        By passwordToggle = By.cssSelector(
+                &quot;button.password-field__toggle&quot;
+        );
+
+        loginPage.enterPassword(samplePassword);
+
+        Assert.assertEquals(
+                driver.findElement(passwordField).getDomProperty(&quot;type&quot;),
+                &quot;password&quot;
+        );
+
+        driver.findElement(passwordToggle).click();
+
+        Assert.assertEquals(
+                driver.findElement(passwordField).getDomProperty(&quot;type&quot;),
+                &quot;text&quot;
+        );
+
+        Assert.assertEquals(
+                driver.findElement(passwordField).getDomProperty(&quot;value&quot;),
+                samplePassword
+        );
+
+        driver.findElement(passwordToggle).click();
+
+        Assert.assertEquals(
+                driver.findElement(passwordField).getDomProperty(&quot;type&quot;),
+                &quot;password&quot;
+        );
+
+        Assert.assertEquals(
+                driver.findElement(passwordField).getDomProperty(&quot;value&quot;),
+                samplePassword
+        );
+    }
+
+    @Test(priority = 6)
+    public void successfulLogin() {
+        loginPage.enterEmail(validEmail);
+        loginPage.enterPassword(validPassword);
+
+        signIn();
+
+        wait.until(
+                ExpectedConditions.urlContains(&quot;/events&quot;)
+        );
+
+        Assert.assertTrue(
+                wait.until(
+                        ExpectedConditions.visibilityOfElementLocated(
+                                By.xpath(&quot;//h2[normalize-space()=&#x27;Events&#x27;]&quot;)
+                        )
+                ).isDisplayed()
+        );
+
+        keepBrowserOpen = true;
+    }
+
+    private void signIn() {
+        System.out.println(
+                &quot;Complete the CAPTCHA manually in the browser.&quot;
+        );
+
+        WebDriverWait captchaWait = new WebDriverWait(
+                driver, Duration.ofSeconds(120)
+        );
+
+        captchaWait.until(
+                ExpectedConditions.elementToBeClickable(
+                        By.cssSelector(&quot;button[type=&#x27;submit&#x27;]&quot;)
+                )
+        );
+
+        loginPage.clickSignIn();
+    }
+
+    private void checkLoginError() {
+        String actualMessage = wait.until(
+                ExpectedConditions.visibilityOfElementLocated(
+                        By.id(&quot;swal2-title&quot;)
+                )
+        ).getText();
+
+        Assert.assertEquals(
+                actualMessage,
+                &quot;Email or password is incorrect&quot;
+        );
+
+        Assert.assertTrue(
+                driver.getCurrentUrl().contains(&quot;/login&quot;)
+        );
+    }
+}</code></pre></div><h3>شرح الكود</h3><table><thead><tr><th>الجزء</th><th>معناه في المشروع</th></tr></thead><tbody><tr><td>validEmail / validPassword</td><td>يقرأ AWARE_EMAIL وAWARE_PASSWORD باستخدام System.getenv. لا توجد كلمة المرور الفعلية داخل الكود.</td></tr><tr><td>openLoginPage / @BeforeMethod</td><td>بعد تجهيز المتصفح الموروث، يتحقق أن متغيرات البيئة ليست null ثم ينشئ LoginPage وwait ويفتح الصفحة. الإعداد ده مطلوب حتى للتيست الفاضي لأن الفحص في BeforeMethod.</td></tr><tr><td>emptyEmailAndPassword / priority=1</td><td>يفرغ الخانتين ويضغط الدخول، ويقارن رسالة البريد المطلوبة، ويتأكد أن الرابط ما زال /login. الكود الحالي لا يتحقق من رسالة Password required هنا.</td></tr><tr><td>correctEmailAndWrongPassword / priority=2</td><td>بريد صحيح من البيئة وباسورد خاطئ تجريبي؛ ثم checkLoginError للتأكد من رسالة الرفض والبقاء بصفحة الدخول.</td></tr><tr><td>wrongEmailAndCorrectPassword / priority=3</td><td>بريد خاطئ تجريبي وباسورد صحيح من البيئة. النتيجة المطلوبة رفض الدخول.</td></tr><tr><td>wrongEmailAndWrongPassword / priority=4</td><td>البريد والباسورد غلط؛ ويشترط نفس رسالة رفض بيانات الدخول.</td></tr><tr><td>showAndHidePassword / priority=5</td><td>يكتب باسورد تجريبي، يتحقق من type=password، يضغط العين فيصبح text مع ثبات value، ثم يرجع password ويتأكد أن القيمة لم تتغير.</td></tr><tr><td>successfulLogin / priority=6</td><td>يكتب البيانات الصحيحة، ينفذ signIn، ينتظر /events ثم عنوان Events. بعد نجاح التحقق يعيّن keepBrowserOpen=true.</td></tr><tr><td>signIn()</td><td>يعرض رسالة حل CAPTCHA يدويًا، وينتظر حتى 120 ثانية أن يصبح submit قابلًا للضغط ثم يستدعي clickSignIn. لا يحل CAPTCHA ولا يتحقق من حالة تحدّي مستقلة؛ الشرط هنا قابلية الزر للضغط.</td></tr><tr><td>checkLoginError()</td><td>ينتظر swal2-title، يقارن النص Email or password is incorrect، ثم يتحقق من /login. دالة مساعدة مش تيست مستقل لأنها من غير @Test.</td></tr><tr><td>ما معنى نجاح السيناريو السلبي؟</td><td>لو البيانات غلط واترفضت بالطريقة المتوقعة يبقى التيست Pass. Pass معناها سلوك الموقع طابق توقع الاختبار، مش إن الحساب دخل.</td></tr></tbody></table><a class="back" href="#top">الرجوع للفهرس ↑</a></section><section id="f8"><h2>8. <bdi>TicketsPage.java</bdi></h2><div class="path">src/main/java/com/wakeb/aware/pages/TicketsPage.java</div><p>Page Object للتذاكر وإنشاء Report من مخالفة ثم متابعة التذكرة.</p><h3>الكود الكامل كما هو في المشروع</h3><div class="code"><pre dir="ltr"><code>package com.wakeb.aware.pages;
+
+import com.wakeb.aware.config.ConfigReader;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.time.Duration;
+import org.openqa.selenium.By;
+import org.openqa.selenium.Keys;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+public class TicketsPage {
+
+    private WebDriver driver;
+    private WebDriverWait wait;
+
+    private By pageTitle = By.xpath(&quot;//h2[normalize-space()=&#x27;Tickets&#x27;]&quot;);
+    private By reportButton = By.xpath(&quot;//button[normalize-space()=&#x27;Report&#x27;]&quot;);
+    private By arabicTitleField = By.cssSelector(&quot;input[placeholder=&#x27;Report title in Arabic&#x27;]&quot;);
+    private By englishTitleField = By.cssSelector(&quot;input[placeholder=&#x27;Report title in English&#x27;]&quot;);
+    private By arabicDescription = By.cssSelector(&quot;textarea[placeholder=&#x27;Description in Arabic&#x27;]&quot;);
+    private By englishDescription = By.cssSelector(&quot;textarea[placeholder=&#x27;Description in English&#x27;]&quot;);
+    private By fileInput = By.cssSelector(&quot;input[type=&#x27;file&#x27;]&quot;);
+    private By confirmReport = By.xpath(&quot;//button[normalize-space()=&#x27;Confirm report&#x27;]&quot;);
+    private By ticketSearch = By.cssSelector(&quot;.table-search input[placeholder=&#x27;Search&#x27;]&quot;);
+    private By details = By.cssSelector(&quot;.card-detail-modal&quot;);
+    private By closeDetails = By.cssSelector(&quot;.card-detail-modal button[aria-label=&#x27;Close&#x27;]&quot;);
+    private By stageField = By.cssSelector(&quot;.card-detail-modal [updatekey=&#x27;step.id&#x27;] input[role=&#x27;combobox&#x27;]&quot;);
+    private By priorityField = By.cssSelector(&quot;.card-detail-modal .field[usetype=&#x27;enum&#x27;] input[role=&#x27;combobox&#x27;]&quot;);
+    private By commentField = By.cssSelector(&quot;textarea[placeholder=&#x27;Enter Add Comment&#x27;]&quot;);
+    private By addCommentButton = By.xpath(&quot;//div[contains(@class,&#x27;card-detail-modal&#x27;)]//button[normalize-space()=&#x27;Add Comment&#x27;]&quot;);
+    private By historyTab = By.xpath(&quot;//div[contains(@class,&#x27;card-detail-modal&#x27;)]//button[normalize-space()=&#x27;History&#x27;]&quot;);
+
+    public TicketsPage(WebDriver driver) throws IOException {
+        this.driver = driver;
+        int timeout = Integer.parseInt(ConfigReader.get(&quot;timeout.seconds&quot;));
+        wait = new WebDriverWait(driver, Duration.ofSeconds(timeout));
+    }
+
+    public void open() throws IOException {
+        driver.get(ConfigReader.get(&quot;base.url&quot;) + &quot;/tickets&quot;);
+        wait.until(ExpectedConditions.visibilityOfElementLocated(pageTitle));
+    }
+
+    public void openReportForm(int violationNumber) throws IOException {
+        driver.get(ConfigReader.get(&quot;base.url&quot;) + &quot;/events/view-event/&quot; + violationNumber);
+        click(reportButton);
+        wait.until(ExpectedConditions.visibilityOfElementLocated(englishTitleField));
+    }
+
+    public void enterReportTitles(String arabicTitle, String englishTitle) {
+        type(arabicTitleField, arabicTitle);
+        type(englishTitleField, englishTitle);
+    }
+
+    public void chooseReportOptions(String priority, String phase, String detectionType, String reportTo) {
+        click(By.xpath(&quot;//button[normalize-space()=&#x27;&quot; + priority + &quot;&#x27;]&quot;));
+        selectOption(reportField(&quot;Phase&quot;), phase);
+        selectOption(reportField(&quot;Detection Type&quot;), detectionType);
+        selectOption(reportField(&quot;Report to&quot;), reportTo);
+    }
+
+    public void enterDescriptions(String arabicText, String englishText) {
+        type(arabicDescription, arabicText);
+        type(englishDescription, englishText);
+    }
+
+    public void uploadAttachment(String filePath) {
+        Path attachment = Path.of(filePath).toAbsolutePath();
+        wait.until(ExpectedConditions.presenceOfElementLocated(fileInput))
+                .sendKeys(attachment.toString());
+        wait.until(ExpectedConditions.textToBePresentInElementLocated(
+                By.cssSelector(&quot;[role=&#x27;dialog&#x27;]&quot;), attachment.getFileName().toString()));
+    }
+
+    public void submitReport() {
+        click(confirmReport);
+        wait.until(ExpectedConditions.invisibilityOfElementLocated(englishTitleField));
+    }
+
+    public void searchTicket(String title) {
+        WebElement search = wait.until(ExpectedConditions.visibilityOfElementLocated(ticketSearch));
+        if (!title.equals(search.getDomProperty(&quot;value&quot;))) {
+            search.clear();
+            search.sendKeys(title);
+        }
+        wait.until(ExpectedConditions.numberOfElementsToBe(
+                By.cssSelector(&quot;tr.v-data-table__tr&quot;), 1));
+        wait.until(ExpectedConditions.visibilityOfElementLocated(ticketRow(title)));
+    }
+
+    public String getTicketRowText(String title) {
+        return wait.until(ExpectedConditions.visibilityOfElementLocated(ticketRow(title))).getText();
+    }
+
+    public void openTicket(String title) {
+        searchTicket(title);
+        click(By.xpath(rowXPath(title) + &quot;//button[contains(@class,&#x27;btn--table-icon&#x27;)]&quot;));
+        WebElement view = wait.until(d -&gt; {
+            for (WebElement button : d.findElements(
+                    By.cssSelector(&quot;button[role=&#x27;menuitem&#x27;][data-voice-action=&#x27;view&#x27;]&quot;))) {
+                if (button.isDisplayed() &amp;&amp; button.isEnabled()) {
+                    return button;
+                }
+            }
+            return null;
+        });
+        view.click();
+        wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.xpath(&quot;//div[contains(@class,&#x27;card-detail-modal&#x27;)]//h2[normalize-space()=&#x27;&quot; + title + &quot;&#x27;]&quot;)));
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(&quot;.card-detail-modal [updatekey=&#x27;step.id&#x27;] div[role=&#x27;combobox&#x27;]&quot;)));
+    }
+
+    public String getStage() {
+        return wait.until(ExpectedConditions.presenceOfElementLocated(stageField)).getDomProperty(&quot;value&quot;);
+    }
+
+    public String getPriority() {
+        return wait.until(ExpectedConditions.presenceOfElementLocated(priorityField)).getDomProperty(&quot;value&quot;);
+    }
+
+    public String getDetailsText() {
+        return wait.until(ExpectedConditions.visibilityOfElementLocated(details)).getText();
+    }
+
+    public boolean hasAttachment() {
+        return !driver.findElements(By.cssSelector(&quot;.card-detail-modal a[href*=&#x27;/storage/&#x27;]&quot;)).isEmpty();
+    }
+
+    public void changePriority(String priority) {
+        selectOption(priorityField, priority);
+        wait.until(ExpectedConditions.textToBePresentInElementValue(priorityField, priority));
+    }
+
+    public void changeStage(String stage) {
+        selectOption(stageField, stage);
+        wait.until(ExpectedConditions.textToBePresentInElementValue(stageField, stage));
+    }
+
+    public void addComment(String comment) {
+        type(commentField, comment);
+        click(addCommentButton);
+        wait.until(ExpectedConditions.textToBePresentInElementLocated(details, comment));
+        wait.until(d -&gt; d.findElement(commentField).getDomProperty(&quot;value&quot;).isEmpty());
+    }
+
+    public void openHistory() {
+        click(historyTab);
+    }
+
+    public void close() {
+        click(closeDetails);
+        wait.until(ExpectedConditions.invisibilityOfElementLocated(details));
+    }
+
+    private By reportField(String label) {
+        return By.xpath(&quot;//div[contains(@class,&#x27;field-label&#x27;) and normalize-space()=&#x27;&quot;
+                + label + &quot;&#x27;]/..//input[@role=&#x27;combobox&#x27;]&quot;);
+    }
+
+    private String rowXPath(String title) {
+        return &quot;//tr[.//h2[normalize-space()=&#x27;&quot; + title + &quot;&#x27;]]&quot;;
+    }
+
+    private By ticketRow(String title) {
+        return By.xpath(rowXPath(title));
+    }
+
+    private void selectOption(By field, String optionText) {
+        WebElement input = wait.until(ExpectedConditions.presenceOfElementLocated(field));
+        WebElement dropdown = input.findElement(
+                By.xpath(&quot;ancestor::div[@role=&#x27;combobox&#x27;][1]&quot;));
+        wait.until(ExpectedConditions.elementToBeClickable(dropdown)).click();
+        WebElement option = wait.until(d -&gt; {
+            for (WebElement item : d.findElements(By.cssSelector(&quot;div[role=&#x27;option&#x27;]&quot;))) {
+                if (item.isDisplayed() &amp;&amp; item.getText().trim().equals(optionText)) {
+                    return item;
+                }
+            }
+            return null;
+        });
+        if (!&quot;true&quot;.equals(option.getDomAttribute(&quot;aria-selected&quot;))) {
+            option.click();
+        }
+        driver.switchTo().activeElement().sendKeys(Keys.ESCAPE);
+        wait.until(ExpectedConditions.attributeToBe(field, &quot;aria-expanded&quot;, &quot;false&quot;));
+    }
+
+    private void click(By locator) {
+        wait.until(ExpectedConditions.elementToBeClickable(locator)).click();
+    }
+
+    private void type(By locator, String text) {
+        WebElement field = wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+        field.clear();
+        field.sendKeys(text);
+    }
+}</code></pre></div><h3>شرح الكود</h3><table><thead><tr><th>الجزء</th><th>معناه في المشروع</th></tr></thead><tbody><tr><td>المحددات في بداية الكلاس</td><td>pageTitle للعنوان، reportButton لبدء التقرير، حقول عربية وإنجليزية، ملف المرفق، البحث، نافذة التفاصيل، المرحلة، الأولوية، التعليق والتاريخ. كل By له وظيفة واضحة.</td></tr><tr><td>TicketsPage / open</td><td>الكونستراكتور يجهز المتصفح والانتظار. open يفتح /tickets وينتظر عنوان Tickets.</td></tr><tr><td>openReportForm(int violationNumber)</td><td>يفتح /events/view-event/{id} ثم يضغط Report وينتظر نموذج التقرير. التذكرة تبدأ من مخالفة محددة، مش من زر إضافة عام في جدول Tickets.</td></tr><tr><td>enterReportTitles / enterDescriptions</td><td>يملأ عنوانًا ووصفًا بالعربي والإنجليزي باستخدام type المساعدة.</td></tr><tr><td>chooseReportOptions</td><td>يضغط أولوية التقرير ثم يختار Phase وDetection Type وReport to من القوائم.</td></tr><tr><td>uploadAttachment</td><td>يحول المسار إلى مطلق ويرسله مباشرة إلى input[type=file]، ثم ينتظر ظهور اسم الملف في الحوار. مش محتاج يحرّك نافذة اختيار ملفات Windows.</td></tr><tr><td>submitReport</td><td>يضغط Confirm report وينتظر اختفاء النموذج. إثبات وجود التذكرة بعد الحفظ يحصل بعد كده في التيست.</td></tr><tr><td>searchTicket</td><td>يكتب العنوان لو اختلف عن القيمة الحالية، ينتظر صف بيانات واحد، ثم الصف المطابق للعنوان. وجود صف واحد وحده لا يكفي؛ التطابق مطلوب أيضًا.</td></tr><tr><td>getTicketRowText</td><td>يرجع نص الصف للتيست لكي يتحقق من العنوان والمرحلة والأولوية.</td></tr><tr><td>openTicket</td><td>يبحث، يفتح قائمة أكشنز الصف، يختار زر View الظاهر والمفعّل، ثم ينتظر تفاصيل التذكرة المطلوبة وحقل المرحلة. View هنا اسم إجراء فتح التفاصيل في التطبيق.</td></tr><tr><td>getStage / getPriority / getDetailsText</td><td>يرجع القيم الحالية أو نص نافذة التفاصيل. الكود يستخدم getDomProperty(value) لقراءة اختيار الحقول.</td></tr><tr><td>hasAttachment</td><td>يفحص وجود رابط storage داخل نافذة التذكرة. يثبت وجود رابط مرفق، وليس تحميل الملف أو فحص محتواه.</td></tr><tr><td>changePriority / changeStage</td><td>يختار القيمة المطلوبة وينتظر ظهورها في الحقل. التيست يغلق التفاصيل ويفتحها بعد ذلك ليثبت استمرار الحفظ.</td></tr><tr><td>addComment</td><td>يكتب التعليق ويضغط Add Comment، ينتظر ظهور النص ثم إفراغ خانة التعليق.</td></tr><tr><td>openHistory / close</td><td>الأولى تفتح History. الثانية تغلق التفاصيل وتنتظر اختفاء نافذتها.</td></tr><tr><td>reportField / rowXPath / ticketRow</td><td>تبني محددات حسب اسم الحقل أو عنوان التذكرة؛ بدل تكرار XPath كامل مع كل استدعاء.</td></tr><tr><td>selectOption</td><td>يطلع لأقرب div role=combobox، يفتح القائمة، يختار option ظاهرًا بنفس النص، ويتجنب إعادة الضغط لو aria-selected=true، ثم Escape وينتظر إغلاق القائمة.</td></tr><tr><td>click / type</td><td>دوال صغيرة لتوحيد الانتظار والضغط أو المسح والكتابة. private معناها تستخدم داخل TicketsPage فقط.</td></tr><tr><td>افتراض مهم</td><td>العنوان المتولد في تيستنا لا يحتوي علامات اقتباس مفردة. بناء XPath هنا بالدمج النصي ليس محللًا عامًا لأي عنوان ممكن.</td></tr></tbody></table><a class="back" href="#top">الرجوع للفهرس ↑</a></section><section id="f9"><h2>9. <bdi>TicketsTests.java</bdi></h2><div class="path">src/test/java/com/wakeb/aware/tests/tickets/TicketsTests.java</div><p>تيست End to End واحد فيه خطوات وتحققات متعددة.</p><h3>الكود الكامل كما هو في المشروع</h3><div class="code"><pre dir="ltr"><code>package com.wakeb.aware.tests.tickets;
+
+import com.wakeb.aware.config.ConfigReader;
+import com.wakeb.aware.pages.LoginPage;
+import com.wakeb.aware.pages.TicketsPage;
+import com.wakeb.aware.tests.BaseTest;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Duration;
+import org.openqa.selenium.By;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import org.testng.Assert;
+import org.testng.annotations.Test;
+
+public class TicketsTests extends BaseTest {
+
+    @Test
+    public void ticketLifecycle() throws IOException {
+        String email = System.getenv(&quot;AWARE_EMAIL&quot;);
+        String password = System.getenv(&quot;AWARE_PASSWORD&quot;);
+        Assert.assertNotNull(email, &quot;Set AWARE_EMAIL before running.&quot;);
+        Assert.assertNotNull(password, &quot;Set AWARE_PASSWORD before running.&quot;);
+
+        Path attachment = Path.of(&quot;src/test/resources/testdata/ticket-evidence.png&quot;);
+        Assert.assertTrue(Files.isRegularFile(attachment), &quot;The ticket attachment is missing.&quot;);
+
+        LoginPage loginPage = new LoginPage(driver);
+        loginPage.open();
+        loginPage.enterEmail(email);
+        loginPage.enterPassword(password);
+
+        System.out.println(&quot;Complete the CAPTCHA manually. Selenium will click Sign In.&quot;);
+        new WebDriverWait(driver, Duration.ofSeconds(120)).until(
+                ExpectedConditions.elementToBeClickable(By.cssSelector(&quot;button[type=&#x27;submit&#x27;]&quot;)));
+        loginPage.clickSignIn();
+
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+        wait.until(ExpectedConditions.urlContains(&quot;/events&quot;));
+        Assert.assertTrue(wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.xpath(&quot;//h2[normalize-space()=&#x27;Events&#x27;]&quot;))).isDisplayed());
+
+        String runId = String.valueOf(System.currentTimeMillis());
+        String title = &quot;Visitor Review &quot; + runId;
+        String description = &quot;Review visitor count at the main warehouse entrance&quot;;
+        String comment = &quot;Visitor count checked during warehouse follow up &quot; + runId;
+
+        TicketsPage ticketsPage = new TicketsPage(driver);
+        int violationNumber = Integer.parseInt(ConfigReader.get(&quot;ticket.violation.id&quot;));
+        ticketsPage.openReportForm(violationNumber);
+        ticketsPage.enterReportTitles(&quot;مراجعة عدد زوار المستودع&quot;, title);
+        ticketsPage.chooseReportOptions(&quot;Medium&quot;, &quot;New&quot;,
+                ConfigReader.get(&quot;ticket.detection.type&quot;), ConfigReader.get(&quot;ticket.report.to&quot;));
+        ticketsPage.enterDescriptions(&quot;مراجعة عدد الزوار عند مدخل المستودع الرئيسي&quot;, description);
+        ticketsPage.uploadAttachment(attachment.toString());
+        ticketsPage.submitReport();
+        System.out.println(&quot;Created ticket: &quot; + title);
+
+        ticketsPage.open();
+        ticketsPage.searchTicket(title);
+        String row = ticketsPage.getTicketRowText(title);
+        Assert.assertTrue(row.contains(title), &quot;The new ticket is missing from the table.&quot;);
+        Assert.assertTrue(row.contains(&quot;New&quot;), &quot;The initial stage should be New.&quot;);
+        Assert.assertTrue(row.contains(&quot;Medium&quot;), &quot;The initial priority should be Medium.&quot;);
+
+
+        ticketsPage.openTicket(title);
+        Assert.assertEquals(ticketsPage.getStage(), &quot;New&quot;);
+        Assert.assertEquals(ticketsPage.getPriority(), &quot;Medium&quot;);
+        Assert.assertTrue(ticketsPage.getDetailsText().contains(description));
+        Assert.assertTrue(ticketsPage.getDetailsText().contains(ConfigReader.get(&quot;ticket.detection.type&quot;))); 
+        Assert.assertTrue(ticketsPage.getDetailsText().contains(ConfigReader.get(&quot;ticket.report.to&quot;)));
+        Assert.assertTrue(ticketsPage.hasAttachment(), &quot;The saved ticket attachment is missing.&quot;);
+
+        ticketsPage.addComment(comment);
+        ticketsPage.changePriority(&quot;High&quot;);
+        ticketsPage.close();
+        ticketsPage.openTicket(title);
+        Assert.assertEquals(ticketsPage.getPriority(), &quot;High&quot;, &quot;Priority was not saved.&quot;);
+        Assert.assertTrue(ticketsPage.getDetailsText().contains(comment), &quot;Comment was not saved.&quot;);
+
+        ticketsPage.changeStage(&quot;In Analysis&quot;);
+        ticketsPage.openHistory();
+        Assert.assertTrue(wait.until(ExpectedConditions.textToBePresentInElementLocated(
+                By.cssSelector(&quot;.card-detail-modal&quot;), &quot;to In Analysis&quot;)));
+        ticketsPage.close();
+        ticketsPage.openTicket(title);
+        Assert.assertEquals(ticketsPage.getStage(), &quot;In Analysis&quot;, &quot;Stage was not saved.&quot;);
+
+        ticketsPage.changeStage(&quot;Resolved&quot;);
+        ticketsPage.openHistory();
+        Assert.assertTrue(wait.until(ExpectedConditions.textToBePresentInElementLocated(
+                By.cssSelector(&quot;.card-detail-modal&quot;), &quot;to Resolved&quot;)));
+        ticketsPage.close();
+        ticketsPage.openTicket(title);
+        Assert.assertEquals(ticketsPage.getStage(), &quot;Resolved&quot;, &quot;The ticket was not resolved.&quot;);
+        Assert.assertEquals(ticketsPage.getPriority(), &quot;High&quot;);
+        Assert.assertTrue(ticketsPage.getDetailsText().contains(comment));
+        ticketsPage.close();
+
+        row = ticketsPage.getTicketRowText(title);
+        Assert.assertTrue(row.contains(&quot;Resolved&quot;), &quot;The table should show Resolved.&quot;);
+        Assert.assertTrue(row.contains(&quot;High&quot;), &quot;The table should show High priority.&quot;);
+        System.out.println(&quot;Ticket lifecycle passed: &quot; + title);
+    }
+}</code></pre></div><h3>شرح الكود</h3><table><thead><tr><th>الجزء</th><th>معناه في المشروع</th></tr></thead><tbody><tr><td>ticketLifecycle()</td><td>دالة @Test واحدة، فالتقرير يحسبها تيست واحد حتى لو فيها أكتر من عشرين خطوة.</td></tr><tr><td>فحص البيئة والمرفق</td><td>يتحقق من وجود AWARE_EMAIL وAWARE_PASSWORD ومن أن ticket-evidence.png ملف فعلي. تشغيل التيست من جذر المشروع مهم للمسار النسبي.</td></tr><tr><td>الدخول وCAPTCHA</td><td>يفتح صفحة الدخول ويملأ البيانات وينتظر الزر مع تدخل يدوي لحل CAPTCHA؛ ثم يتحقق من /events والعنوان.</td></tr><tr><td>runId / title / description / comment</td><td>runId من وقت التشغيل بالمللي ثانية لتقليل تكرار العنوان والتعليق. التكرار يقل لكنه ليس ضمانًا رياضيًا للتفرد في كل بيئة.</td></tr><tr><td>إنشاء التقرير</td><td>يفتح المخالفة المحددة، يملأ العنوانين، Medium وNew والـDetection Type والـReport to والوصفين، ويرفع صورة ثم يؤكد التقرير.</td></tr><tr><td>التحقق الأول</td><td>يفتح Tickets ويبحث بالعنوان ويتأكد من الصف New وMedium. يفتح التفاصيل ويتأكد من المرحلة والأولوية والوصف والنوع والجهة ورابط المرفق.</td></tr><tr><td>التعليق والأولوية</td><td>يضيف تعليقًا ويغير الأولوية إلى High. يغلق ويفتح التفاصيل ويؤكد بقاء التعليق والأولوية.</td></tr><tr><td>In Analysis ثم Resolved</td><td>يغيّر المرحلة إلى In Analysis ويتحقق من History ثم يعيد الفتح. يكرر مع Resolved ويتأكد من الحفظ ومن التعليق والأولوية High.</td></tr><tr><td>التحقق النهائي</td><td>يتأكد من Resolved وHigh في الجدول. انتهاء الدالة من غير Assert فاشل أو Exception يجعل التيست Pass.</td></tr><tr><td>حدود السيناريو</td><td>هو دورة حتى Resolved، وليس مرحلة Closed غير الموجودة بالكود. لا يحذف التذكرة الناتجة، ولا يختبر تبديل أدوار أو إرسال بريد، ولا ينفذ كل احتمالات Tickets.</td></tr></tbody></table><a class="back" href="#top">الرجوع للفهرس ↑</a></section><section id="f10"><h2>10. <bdi>all.xml</bdi></h2><div class="path">src/test/resources/testng/all.xml</div><p>اختيار كلاسات TestNG المطلوب تشغيلها.</p><h3>الكود الكامل كما هو في المشروع</h3><div class="code"><pre dir="ltr"><code>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE suite SYSTEM &quot;https://testng.org/testng-1.0.dtd&quot;&gt;
+&lt;suite name=&quot;Aware all&quot; verbose=&quot;1&quot;&gt;
+  &lt;test name=&quot;all&quot;&gt;
+    &lt;classes&gt;
+      &lt;class name=&quot;com.wakeb.aware.tests.login.LoginTests&quot; /&gt;
+      &lt;class name=&quot;com.wakeb.aware.tests.tickets.TicketsTests&quot; /&gt;
+    &lt;/classes&gt;
+  &lt;/test&gt;
+&lt;/suite&gt;</code></pre></div><h3>شرح الكود</h3><table><thead><tr><th>الجزء</th><th>معناه في المشروع</th></tr></thead><tbody><tr><td>suite / test / classes / class</td><td>suite مجموعة تشغيل، test مجموعة داخلها، classes تجمع الكلاسات، وclass يكتب الاسم الكامل بالكلاسات والبكدجات.</td></tr><tr><td>all.xml</td><td>يشمل LoginTests وTicketsTests. أول كلاس فيه ستة @Test والتاني واحد؛ العدد المقصود سبعة اختبارات.</td></tr><tr><td>login.xml / tickets.xml</td><td>كل ملف يشغل كلاس واحد فقط. المسار src/test/resources/testng. الـXML لا يكتب السيناريو ولا يحل محل Java.</td></tr><tr><td>verbose=1</td><td>مستوى تفاصيل رسائل TestNG. ليس مدة انتظار أو عدد تكرار.</td></tr></tbody></table><a class="back" href="#top">الرجوع للفهرس ↑</a></section><section id="f11"><h2>11. <bdi>Main.java</bdi></h2><div class="path">src/main/java/org/example/Main.java</div><p>ملف تجريبي أنشأه IntelliJ؛ خارج مسار الأوتوميشن.</p><h3>الكود الكامل كما هو في المشروع</h3><div class="code"><pre dir="ltr"><code>package org.example;
+
+//TIP To &lt;b&gt;Run&lt;/b&gt; code, press &lt;shortcut actionId=&quot;Run&quot;/&gt; or
+// click the &lt;icon src=&quot;AllIcons.Actions.Execute&quot;/&gt; icon in the gutter.
+public class Main {
+    static void main() {
+        //TIP Press &lt;shortcut actionId=&quot;ShowIntentionActions&quot;/&gt; with your caret at the highlighted text
+        // to see how IntelliJ IDEA suggests fixing it.
+        IO.println(String.format(&quot;Hello and welcome!&quot;));
+
+        for (int i = 1; i &lt;= 5; i++) {
+            //TIP Press &lt;shortcut actionId=&quot;Debug&quot;/&gt; to start debugging your code. We have set one &lt;icon src=&quot;AllIcons.Debugger.Db_set_breakpoint&quot;/&gt; breakpoint
+            // for you, but you can always add more by pressing &lt;shortcut actionId=&quot;ToggleLineBreakpoint&quot;/&gt;.
+            IO.println(&quot;i = &quot; + i);
+        }
+    }
+}</code></pre></div><h3>شرح الكود</h3><table><thead><tr><th>الجزء</th><th>معناه في المشروع</th></tr></thead><tbody><tr><td>Main / main / for</td><td>يطبع رسالة ثم الأعداد من 1 إلى 5. لا يوجد Selenium أو TestNG فيه، وليس نقطة تشغيل LoginTests أو TicketsTests.</td></tr><tr><td>وجود الملف</td><td>وجوده في المشروع لا يعني إن الاختبارات تعتمد عليه. نشرحه علشان ما تتلخبطش، من غير تعديل أو حذف ملفات المصدر.</td></tr></tbody></table><a class="back" href="#top">الرجوع للفهرس ↑</a></section><section id="f12"><h2>12. <bdi>login.xml</bdi></h2><div class="path">src/test/resources/testng/login.xml</div><p>اختيار كلاسات TestNG المطلوب تشغيلها.</p><h3>الكود الكامل كما هو في المشروع</h3><div class="code"><pre dir="ltr"><code>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE suite SYSTEM &quot;https://testng.org/testng-1.0.dtd&quot;&gt;
+&lt;suite name=&quot;Aware login&quot; verbose=&quot;1&quot;&gt;
+  &lt;test name=&quot;login&quot;&gt;
+    &lt;classes&gt;
+      &lt;class name=&quot;com.wakeb.aware.tests.login.LoginTests&quot; /&gt;
+    &lt;/classes&gt;
+  &lt;/test&gt;
+&lt;/suite&gt;</code></pre></div><h3>شرح الكود</h3><table><thead><tr><th>الجزء</th><th>معناه في المشروع</th></tr></thead><tbody><tr><td>suite / test / classes / class</td><td>suite مجموعة تشغيل، test مجموعة داخلها، classes تجمع الكلاسات، وclass يكتب الاسم الكامل بالكلاسات والبكدجات.</td></tr><tr><td>all.xml</td><td>يشمل LoginTests وTicketsTests. أول كلاس فيه ستة @Test والتاني واحد؛ العدد المقصود سبعة اختبارات.</td></tr><tr><td>login.xml / tickets.xml</td><td>كل ملف يشغل كلاس واحد فقط. المسار src/test/resources/testng. الـXML لا يكتب السيناريو ولا يحل محل Java.</td></tr><tr><td>verbose=1</td><td>مستوى تفاصيل رسائل TestNG. ليس مدة انتظار أو عدد تكرار.</td></tr></tbody></table><a class="back" href="#top">الرجوع للفهرس ↑</a></section><section id="f13"><h2>13. <bdi>tickets.xml</bdi></h2><div class="path">src/test/resources/testng/tickets.xml</div><p>اختيار كلاسات TestNG المطلوب تشغيلها.</p><h3>الكود الكامل كما هو في المشروع</h3><div class="code"><pre dir="ltr"><code>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE suite SYSTEM &quot;https://testng.org/testng-1.0.dtd&quot;&gt;
+&lt;suite name=&quot;Aware tickets&quot; verbose=&quot;1&quot;&gt;
+  &lt;test name=&quot;tickets&quot;&gt;
+    &lt;classes&gt;
+      &lt;class name=&quot;com.wakeb.aware.tests.tickets.TicketsTests&quot; /&gt;
+    &lt;/classes&gt;
+  &lt;/test&gt;
+&lt;/suite&gt;</code></pre></div><h3>شرح الكود</h3><table><thead><tr><th>الجزء</th><th>معناه في المشروع</th></tr></thead><tbody><tr><td>suite / test / classes / class</td><td>suite مجموعة تشغيل، test مجموعة داخلها، classes تجمع الكلاسات، وclass يكتب الاسم الكامل بالكلاسات والبكدجات.</td></tr><tr><td>all.xml</td><td>يشمل LoginTests وTicketsTests. أول كلاس فيه ستة @Test والتاني واحد؛ العدد المقصود سبعة اختبارات.</td></tr><tr><td>login.xml / tickets.xml</td><td>كل ملف يشغل كلاس واحد فقط. المسار src/test/resources/testng. الـXML لا يكتب السيناريو ولا يحل محل Java.</td></tr><tr><td>verbose=1</td><td>مستوى تفاصيل رسائل TestNG. ليس مدة انتظار أو عدد تكرار.</td></tr></tbody></table><a class="back" href="#top">الرجوع للفهرس ↑</a></section><section><h2>تتبع التشغيل والمذاكرة العملية</h2><p>مثال تتبع: شغّل login.xml. TestNG يجهز BaseTest.setUp أولًا لأنه في الكلاس الأب، ثم openLoginPage في LoginTests. بعدها ينفذ السيناريو حسب priority. لو البيانات غلط، المطلوب ظهور رسالة رفض؛ دي نتيجة نجاح للتيست السلبي.</p><p>في سيناريو ناجح: enterEmail وenterPassword يملؤوا النموذج. signIn ينتظر زر الدخول مع حل CAPTCHA يدويًا. successfulLogin ينتظر Events ثم يترك المتصفح. بعده tearDown يقرأ keepBrowserOpen=true فلا يغلق النافذة.</p><p>في Tickets: اقرأ ticketLifecycle من فوق لتحت؛ كل اسم دالة في TicketsPage يشرح خطوة واضحة. اختَر openTicket وشوف إزاي يبحث عن العنوان الصحيح ثم يفتح View. اختَر changeStage وشوف التحقق المحلي في الحقل، ثم ارجع للتيست وشوف إعادة الفتح التي تثبت الحفظ.</p><p>للتشغيل من IntelliJ: افتح المشروع من pom.xml، استخدم JDK 27 واعمل Sync Maven، واضبط AWARE_EMAIL وAWARE_PASSWORD في Environment variables لنفس Run Configuration. شغّل login.xml أو tickets.xml من src/test/resources/testng. لو ظهرت رسالة Set AWARE_EMAIL تأكد إنك عدلت إعداد التشغيل اللي بتشغله فعلًا.</p><p>لا تستخدم باسوردًا فعليًا داخل screenshots أو مستندات المذاكرة. القيم WrongPassword123! وTestPassword123! في الكود بيانات تجريبية مقصودة، وليست حسابًا صالحًا.</p><p>نطاق التحقق: شرحنا السبع @Test الموجودة، وليس تغطية كاملة للموقع. تسجيل CAPTCHA يدوي يجعل الدخول هنا assisted automation. هذه الجلسة لم تعد تشغيل Aware؛ نجاحه السابق لا يمثل تشغيلًا جديدًا بتاريخ الشرح.</p><p>TimeoutException يعني الشرط المطلوب لم يتحقق في الوقت؛ راجع الصفحة والعنصر واللغة وCAPTCHA قبل القول إن ده بج موقع. ElementClickInterceptedException يعني إن الضغط اتغطى بعنصر آخر. الخروج exit code=0 وحده ليس كافيًا لو واجهة TestNG أظهرت Fail؛ اقرأ عدد النتائج وتفاصيل Assert.</p></section><section><h2>أسئلة ممكن تتسأل فيها</h2><table><thead><tr><th>الجزء</th><th>معناه في المشروع</th></tr></thead><tbody><tr><td>ليه ConfigReader؟</td><td>علشان عنوان الموقع والانتظار واختيارات التذكرة تتغير من ملف واحد.</td></tr><tr><td>ليه Constructor بياخد driver؟</td><td>علشان صفحات المشروع تتعامل مع نفس جلسة المتصفح اللي فتحها BaseTest.</td></tr><tr><td>ليه ما استخدمتش Cucumber؟</td><td>التنفيذ الحالي Java وTestNG بسيط ومباشر، والسيناريوهات مقروءة من أسماء الدوال. Cucumber مش dependency في المشروع.</td></tr><tr><td>هل priority=6 يعني High priority؟</td><td>لا؛ ترتيب تنفيذ TestNG هنا، مختلف عن أولوية عيب أو أولوية تذكرة High.</td></tr><tr><td>ليه بتفتح وتقفل Chrome؟</td><td>BeforeMethod يفتح جلسة مستقلة لكل تيست وAfterMethod يقفلها بعد خمس ثوانٍ، ما عدا successfulLogin بعد تحقق النجاح.</td></tr><tr><td>هل CAPTCHA متأتمتة؟</td><td>لا؛ المستخدم يحلها يدويًا، والكود ينتظر قابلية زر الدخول للضغط.</td></tr><tr><td>ليه Resolved مش Closed؟</td><td>دي المرحلة النهائية المستخدمة في الكود الفعلي. لا ننسب له مرحلة مش موجودة.</td></tr><tr><td>هل رفع المرفق معناه محتواه اتفحص؟</td><td>لا؛ نتحقق من اسم الملف في نموذج التقرير ثم وجود رابط مرفق بعد الحفظ.</td></tr><tr><td>إيه أهم تحقق بعد Edit؟</td><td>إعادة فتح التذكرة والتأكد من بقاء المرحلة أو الأولوية والتعليق، بدل الاكتفاء بتغير الحقل فور الضغط.</td></tr></tbody></table></section><section><h2>تقديم المشروع في بريزنتيشن</h2><div class="say"><p>أنا استخدمت Java مع Selenium وTestNG وMaven. قسمت المشروع لصفحات فيها عناصر الموقع والتعاملات معها، واختبارات فيها السيناريو والتحقق من النتيجة. الإعدادات في ملف مستقل وبيانات الحساب في Environment variables. بستخدم انتظار بشرط بدل انتظار ثابت لكل خطوة، وبعيد فتح البيانات بعد تعديلها علشان أتأكد إن الحفظ مستمر. بعد كده أشرح سيناريو كامل من أول تجهيز المتصفح لحد آخر Assert، وأوضح الجزء اليدوي وحدود التغطية لو موجودين.</p></div><p>ابدأ بالمشكلة اللي بتختبرها، ثم احكي ترتيب الخطوات، وبعدها افتح الكود اللي يثبت كلامك. ما تقولش إننا اختبرنا ميزة لمجرد وجود اسمها في إعداد أو دالة غير مستدعاة.</p></section><footer>مصدر الشرح: <bdi>Wakeb_Aware_Automation_Practice</bdi> — كامل ملفات Java وMaven والإعدادات وTestNG المتاحة في هذه النسخة. ملف صورة المرفق في Aware بيانات اختبار، وليس كودًا.</footer></main></body></html>
